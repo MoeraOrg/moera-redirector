@@ -1,6 +1,7 @@
 package org.moera.redirector;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -16,6 +17,12 @@ public class RequestHandler implements HttpHandler {
 
     public static final String USER_AGENT = "user-agent";
 
+    private final NamingCache namingCache;
+
+    public RequestHandler() throws MalformedURLException {
+        namingCache = new NamingCache();
+    }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         URI uri = httpExchange.getRequestURI();
@@ -25,12 +32,30 @@ public class RequestHandler implements HttpHandler {
             httpExchange.close();
         }
 
+        UniversalLocation uni = new UniversalLocation(uri);
         URI target;
         try {
             if (isModernBrowser(httpExchange.getRequestHeaders().getFirst(USER_AGENT))) {
-                target = new URI("https", DEFAULT_CLIENT, uri.getPath(), uri.getQuery(), uri.getFragment());
+                if (uni.getNodeName() != null) {
+                    NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));
+                    if (root.getUrl() != null) {
+                        uni.setSchemeAndAuthority(new URI(root.getUrl()));
+                    }
+                }
+                target = new URI("https", DEFAULT_CLIENT, uni.getLocation(), uni.getQuery(), uni.getFragment());
             } else {
-                UniversalLocation uni = new UniversalLocation(uri);
+                if (uni.getNodeName() != null) {
+                    NodeUrl root = uni.getAuthority() != null
+                            ? namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null))
+                            : namingCache.get(uni.getNodeName());
+                    if (root.getUrl() != null) {
+                        uni.setSchemeAndAuthority(new URI(root.getUrl()));
+                    }
+                }
+                if (uni.getAuthority() == null) {
+                    httpExchange.sendResponseHeaders(NOT_FOUND, 0);
+                    httpExchange.close();
+                }
                 target = new URI(uni.getScheme(), uni.getAuthority(), uni.getPath(), uni.getQuery(), uni.getFragment());
             }
             httpExchange.getResponseHeaders().add("Location", target.toASCIIString());

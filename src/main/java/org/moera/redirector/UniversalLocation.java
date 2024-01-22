@@ -2,18 +2,18 @@ package org.moera.redirector;
 
 import java.net.URI;
 
-public class UniversalLocation {
+import org.moera.naming.rpc.NodeName;
 
-    private final URI uri;
+public class UniversalLocation {
 
     private String nodeName;
     private String scheme;
     private String authority;
     private String path;
+    private String query;
+    private String fragment;
 
     public UniversalLocation(URI uri) {
-        this.uri = uri;
-
         String path = uri.getPath();
         if (path.startsWith("/")) {
             path = path.substring(1);
@@ -67,30 +67,84 @@ public class UniversalLocation {
         }
 
         this.path = buf.isEmpty() ? "/" : buf.toString();
+
+        this.query = uri.getQuery();
+        this.fragment = uri.getFragment();
     }
 
     public String getNodeName() {
         return nodeName;
     }
 
+    public void setNodeName(String nodeName) {
+        this.nodeName = NodeName.shorten(nodeName);
+    }
+
     public String getScheme() {
         return scheme;
+    }
+
+    public void setScheme(String scheme) {
+        if (scheme == null) {
+            scheme = "https";
+        }
+        this.scheme = scheme;
     }
 
     public String getAuthority() {
         return authority;
     }
 
+    public void setAuthority(String authority) {
+        this.authority = authority;
+    }
+
+    public void setSchemeAndAuthority(URI uri) {
+        setScheme(uri.getScheme());
+        setAuthority(uri.getAuthority());
+    }
+
     public String getPath() {
         return path;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getLocation() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("/@");
+        if (nodeName != null) {
+            buf.append(nodeName);
+        }
+        buf.append('/');
+        if (authority != null) {
+            if (scheme != null) {
+                buf.append(scheme).append(':');
+            }
+            buf.append(authority);
+        } else {
+            buf.append('~');
+        }
+        buf.append(path);
+        return buf.toString();
+    }
+
     public String getQuery() {
-        return uri.getQuery();
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     public String getFragment() {
-        return uri.getFragment();
+        return fragment;
+    }
+
+    public void setFragment(String fragment) {
+        this.fragment = fragment;
     }
 
 }

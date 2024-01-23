@@ -5,8 +5,12 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
+
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     private static final int MAX_THREADS = 64;
 
@@ -20,6 +24,8 @@ public class Main {
         server.createContext("/set-client", new SetClientHandler());
         server.setExecutor(Executors.newFixedThreadPool(MAX_THREADS));
         server.start();
+
+        log.info("Redirector service started at port {}", CONFIG.getPort());
     }
 
 }

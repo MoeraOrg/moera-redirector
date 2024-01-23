@@ -23,8 +23,12 @@ import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NamingCache {
+
+    private static final Logger log = LoggerFactory.getLogger(NamingCache.class);
 
     private static final String NAMING_SERVICE_URL = "https://naming.moera.org/moera-naming";
     private static final int NAMING_THREADS = 16;
@@ -108,7 +112,7 @@ public class NamingCache {
                         namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
                 setUrl(new NodeUrl(info != null ? info.getNodeUri() : null));
             } catch (Exception e) {
-                // TODO log error
+                log.error(e.getMessage(), e);
                 setUrl(null);
             }
         }

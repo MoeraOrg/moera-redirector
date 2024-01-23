@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.moera.commons.util.UniversalLocation;
 
 public class LocationHandler implements HttpHandler {
 

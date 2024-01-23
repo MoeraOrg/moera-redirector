@@ -53,7 +53,8 @@ public class LocationHandler implements HttpHandler {
                     httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
                     httpExchange.close();
                 }
-                target = new URI(uni.getScheme(), uni.getAuthority(), uni.getPath(), uni.getQuery(), uni.getFragment());
+                target = new URI(uni.getScheme(), uni.getAuthority(), "/moera" + uni.getPath(), uni.getQuery(),
+                        uni.getFragment());
             }
             httpExchange.getResponseHeaders().add("Location", target.toASCIIString());
             httpExchange.sendResponseHeaders(Http.TEMPORARY_REDIRECT, 0);

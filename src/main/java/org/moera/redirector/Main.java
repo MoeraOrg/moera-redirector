@@ -16,7 +16,8 @@ public class Main {
         CONFIG.parseCommandLine(args);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(CONFIG.getPort()), 0);
-        server.createContext("/", new RequestHandler());
+        server.createContext("/", new LocationHandler());
+        server.createContext("/set-client", new SetClientHandler());
         server.setExecutor(Executors.newFixedThreadPool(MAX_THREADS));
         server.start();
     }

@@ -8,18 +8,13 @@ import java.net.URISyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class RequestHandler implements HttpHandler {
+public class LocationHandler implements HttpHandler {
 
     private static final String DEFAULT_CLIENT = "web.moera.org";
 
-    public static final int TEMPORARY_REDIRECT = 307;
-    public static final int NOT_FOUND = 404;
-
-    public static final String USER_AGENT = "user-agent";
-
     private final NamingCache namingCache;
 
-    public RequestHandler() throws MalformedURLException {
+    public LocationHandler() throws MalformedURLException {
         namingCache = new NamingCache();
     }
 
@@ -28,21 +23,23 @@ public class RequestHandler implements HttpHandler {
         URI uri = httpExchange.getRequestURI();
 
         if (!uri.getPath().startsWith("/@")) {
-            httpExchange.sendResponseHeaders(NOT_FOUND, 0);
+            httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
             httpExchange.close();
         }
 
         UniversalLocation uni = new UniversalLocation(uri);
         URI target;
         try {
-            if (isModernBrowser(httpExchange.getRequestHeaders().getFirst(USER_AGENT))) {
+            if (isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT))) {
                 if (uni.getNodeName() != null) {
                     NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));
                     if (root.getUrl() != null) {
                         uni.setSchemeAndAuthority(new URI(root.getUrl()));
                     }
                 }
-                target = new URI("https", DEFAULT_CLIENT, uni.getLocation(), uni.getQuery(), uni.getFragment());
+                String client = getUserClient(httpExchange.getRequestHeaders().getFirst(Http.COOKIE));
+                client = client != null ? client : DEFAULT_CLIENT;
+                target = new URI("https", client, uni.getLocation(), uni.getQuery(), uni.getFragment());
             } else {
                 if (uni.getNodeName() != null) {
                     NodeUrl root = uni.getAuthority() != null
@@ -53,15 +50,15 @@ public class RequestHandler implements HttpHandler {
                     }
                 }
                 if (uni.getAuthority() == null) {
-                    httpExchange.sendResponseHeaders(NOT_FOUND, 0);
+                    httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
                     httpExchange.close();
                 }
                 target = new URI(uni.getScheme(), uni.getAuthority(), uni.getPath(), uni.getQuery(), uni.getFragment());
             }
             httpExchange.getResponseHeaders().add("Location", target.toASCIIString());
-            httpExchange.sendResponseHeaders(TEMPORARY_REDIRECT, 0);
+            httpExchange.sendResponseHeaders(Http.TEMPORARY_REDIRECT, 0);
         } catch (URISyntaxException e) {
-            httpExchange.sendResponseHeaders(NOT_FOUND, 0);
+            httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
         }
         httpExchange.close();
     }
@@ -100,6 +97,19 @@ public class RequestHandler implements HttpHandler {
         }
 
         return false;
+    }
+
+    private String getUserClient(String cookieHeader) {
+        if (cookieHeader == null) {
+            return null;
+        }
+        String[] cookies = cookieHeader.split("; *");
+        for (String cookie : cookies) {
+            if (cookie.startsWith(Http.COOKIE_CLIENT + "=")) {
+                return cookie.substring(Http.COOKIE_CLIENT.length() + 1);
+            }
+        }
+        return null;
     }
 
 }

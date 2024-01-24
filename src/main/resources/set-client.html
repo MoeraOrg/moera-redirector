@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <style>
+        BODY {
+            background-color: #e9ebee;
+        }
+
+        FORM {
+            width: fit-content;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            border: 1px solid #ced4da;
+            border-radius: .5em;
+            background-color: white;
+            padding: 1em;
+        }
+
+        FORM BUTTON {
+            font-size: 1em;
+            background-color: #6c757d;
+            color: white;
+            border: 0;
+            border-radius: .25em;
+            padding: .375em 2em;
+            margin-right: 2em;
+            cursor: pointer;
+        }
+
+        FORM INPUT[type=submit] {
+            font-size: 1em;
+            background-color: #0d6efd;
+            color: white;
+            border: 0;
+            border-radius: .25em;
+            padding: .375em 2em;
+            cursor: pointer;
+        }
+    </style>
+    <title>Set Default Moera Client</title>
+</head>
+<body>
+    <form method="post" action="/set-client">
+        Do you want <b>{{client}}</b> to be set as your default Moera client?
+        <br><br>
+        <input type="hidden" name="client" value="{{client}}">
+        <input type="hidden" name="return" value="{{return}}">
+        <button onclick="event.preventDefault(); window.location.href='{{return}}'">No</button>
+        <input type="submit" value="Yes">
+    </form>
+</body>
+</html>

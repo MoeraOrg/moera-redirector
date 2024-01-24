@@ -48,7 +48,7 @@ public class NamingCache {
         private boolean fetching;
         private final Object lock = new Object();
 
-        public Record(String nodeName) {
+        Record(String nodeName) {
             this.nodeName = nodeName;
             waitList = new ArrayList<>();
         }

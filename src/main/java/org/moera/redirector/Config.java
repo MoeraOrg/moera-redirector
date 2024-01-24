@@ -10,17 +10,17 @@ import org.apache.commons.cli.ParseException;
 
 public class Config {
 
-    private static String PROGRAM_NAME = Config.class.getPackage().getImplementationTitle();
-    private static String PROGRAM_VERSION = Config.class.getPackage().getImplementationVersion();
+    private static String programName = Config.class.getPackage().getImplementationTitle();
+    private static String programVersion = Config.class.getPackage().getImplementationVersion();
 
     private int port = 8080;
 
     static {
-        if (PROGRAM_NAME == null) {
-            PROGRAM_NAME = "moera-redirector";
+        if (programName == null) {
+            programName = "moera-redirector";
         }
-        if (PROGRAM_VERSION == null) {
-            PROGRAM_VERSION = "SNAPSHOT";
+        if (programVersion == null) {
+            programVersion = "SNAPSHOT";
         }
     }
 
@@ -47,11 +47,11 @@ public class Config {
 
             if (line.hasOption("help")) {
                 HelpFormatter helpFormatter = new HelpFormatter();
-                helpFormatter.printHelp(PROGRAM_NAME, options);
+                helpFormatter.printHelp(programName, options);
                 System.exit(0);
             }
             if (line.hasOption("version")) {
-                System.out.println(PROGRAM_NAME + " " + PROGRAM_VERSION);
+                System.out.println(programName + " " + programVersion);
                 System.exit(0);
             }
             if (line.hasOption("port")) {

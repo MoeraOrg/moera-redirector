@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 public class SetClientHandler implements HttpHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(SetClientHandler.class);
-
     public static final int MAX_LENGTH = 1024;
+
+    private static final Logger log = LoggerFactory.getLogger(SetClientHandler.class);
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {

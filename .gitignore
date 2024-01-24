@@ -27,3 +27,4 @@ replay_pid*
 .*.swp
 /.idea/
 /target/
+/log/

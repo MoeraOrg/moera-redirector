@@ -15,6 +15,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -142,8 +144,9 @@ public class NamingCache {
     public Optional<NodeUrl> getFast(String nodeName) {
         Future<NodeUrl> future = getOrRun(nodeName);
         try {
-            return future.isDone() ? Optional.of(future.get()) : Optional.empty();
-        } catch (InterruptedException | ExecutionException e) {
+            NodeUrl nodeUrl = future.get(500, TimeUnit.MILLISECONDS);
+            return Optional.of(nodeUrl);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             return Optional.empty();
         }
     }

@@ -1,7 +1,5 @@
 package org.moera.redirector;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,11 +18,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
-import com.googlecode.jsonrpc4j.ProxyUtil;
-import org.moera.naming.rpc.NamingService;
-import org.moera.naming.rpc.RegisteredName;
-import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.lib.naming.MoeraNaming;
+import org.moera.lib.naming.NodeName;
+import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +33,7 @@ public class NamingCache {
     private static final Duration NORMAL_TTL = Duration.of(6, ChronoUnit.HOURS);
     private static final Duration ERROR_TTL = Duration.of(1, ChronoUnit.MINUTES);
 
-    private final NamingService namingService;
+    private final MoeraNaming namingService;
     private final ExecutorService executor = Executors.newFixedThreadPool(NAMING_THREADS);
 
     private final class Record {
@@ -109,7 +105,7 @@ public class NamingCache {
 
         private void fetchName() {
             try {
-                RegisteredName registeredName = RegisteredName.parse(nodeName);
+                NodeName registeredName = NodeName.parse(nodeName);
                 RegisteredNameInfo info =
                         namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
                 setUrl(new NodeUrl(info != null ? info.getNodeUri() : null));
@@ -132,9 +128,8 @@ public class NamingCache {
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
     private final Map<String, Record> cache = new HashMap<>();
 
-    public NamingCache() throws MalformedURLException {
-        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(NAMING_SERVICE_URL));
-        namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
+    public NamingCache() {
+        namingService = new MoeraNaming(NAMING_SERVICE_URL);
 
         Thread purgeThread = new Thread(this::purgeRunner);
         purgeThread.setDaemon(true);
@@ -160,7 +155,7 @@ public class NamingCache {
     }
 
     private Future<NodeUrl> getOrRun(String nodeName) {
-        nodeName = RegisteredName.expand(nodeName);
+        nodeName = NodeName.expand(nodeName);
         Record record;
         cacheLock.readLock().lock();
         try {

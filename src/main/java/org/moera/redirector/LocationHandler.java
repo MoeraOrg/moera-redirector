@@ -1,13 +1,12 @@
 package org.moera.redirector;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.moera.commons.util.UniversalLocation;
+import org.moera.lib.UniversalLocation;
 
 public class LocationHandler implements HttpHandler {
 
@@ -15,7 +14,7 @@ public class LocationHandler implements HttpHandler {
 
     private final NamingCache namingCache;
 
-    public LocationHandler() throws MalformedURLException {
+    public LocationHandler() {
         namingCache = new NamingCache();
     }
 
@@ -28,9 +27,9 @@ public class LocationHandler implements HttpHandler {
             httpExchange.close();
         }
 
-        UniversalLocation uni = new UniversalLocation(uri);
-        URI target;
         try {
+            UniversalLocation uni = new UniversalLocation(uri.toString());
+            URI target;
             if (isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT))) {
                 if (uni.getNodeName() != null) {
                     NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));

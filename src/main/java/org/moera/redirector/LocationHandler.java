@@ -30,7 +30,9 @@ public class LocationHandler implements HttpHandler {
         try {
             UniversalLocation uni = new UniversalLocation(uri.toString());
             URI target;
-            if (isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT))) {
+            boolean modernBrowser = isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT));
+            boolean staticContent = isStaticContent(uni.getPath());
+            if (!staticContent && modernBrowser) {
                 if (uni.getNodeName() != null) {
                     NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));
                     if (root.getUrl() != null) {
@@ -43,8 +45,8 @@ public class LocationHandler implements HttpHandler {
             } else {
                 if (uni.getNodeName() != null) {
                     NodeUrl root = uni.getAuthority() != null
-                            ? namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null))
-                            : namingCache.get(uni.getNodeName());
+                        ? namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null))
+                        : namingCache.get(uni.getNodeName());
                     if (root.getUrl() != null) {
                         uni.setSchemeAndAuthority(new URI(root.getUrl()));
                     }
@@ -53,8 +55,9 @@ public class LocationHandler implements HttpHandler {
                     httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
                     httpExchange.close();
                 }
-                target = new URI(uni.getScheme(), uni.getAuthority(), "/moera" + uni.getPath(), uni.getQuery(),
-                        uni.getFragment());
+                target = new URI(
+                    uni.getScheme(), uni.getAuthority(), "/moera" + uni.getPath(), uni.getQuery(), uni.getFragment()
+                );
             }
             httpExchange.getResponseHeaders().add("Location", target.toASCIIString());
             httpExchange.sendResponseHeaders(Http.TEMPORARY_REDIRECT, 0);
@@ -98,6 +101,10 @@ public class LocationHandler implements HttpHandler {
         }
 
         return false;
+    }
+
+    private boolean isStaticContent(String path) {
+        return path.startsWith("/media/");
     }
 
     private String getUserClient(String cookieHeader) {

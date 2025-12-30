@@ -78,7 +78,13 @@ public class LocationHandler implements HttpHandler {
             return false;
         } else if (userAgent.contains("Googlebot")) {
             return false;
+        } else if (userAgent.contains("bingbot")) {
+            return false;
+        } else if (userAgent.contains("yandex.com/bots")) {
+            return false;
         } else if (userAgent.contains("PetalBot")) {
+            return false;
+        } else if (userAgent.contains("SemrushBot")) {
             return false;
         } else if (userAgent.contains("Chrome")) {
             if (userAgent.contains("YaBrowser")) {

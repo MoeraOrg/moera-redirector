@@ -88,7 +88,7 @@ public class NamingCache {
                     throw new IllegalStateException("URL is loaded already");
                 }
                 this.url = url;
-                deadline = Instant.now().plus(url != null ? NORMAL_TTL : ERROR_TTL);
+                deadline = Instant.now().plus(url.getUrl() != null ? NORMAL_TTL : ERROR_TTL);
 
                 list = waitList;
                 waitList = null;
@@ -108,10 +108,11 @@ public class NamingCache {
                 NodeName registeredName = NodeName.parse(nodeName);
                 RegisteredNameInfo info =
                         namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
+                log.info("Resolved {} to {}", nodeName, info != null ? info.getNodeUri() : null);
                 setUrl(new NodeUrl(info != null ? info.getNodeUri() : null));
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                setUrl(null);
+                setUrl(new NodeUrl(null));
             }
         }
 

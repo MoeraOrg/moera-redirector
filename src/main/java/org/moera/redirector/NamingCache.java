@@ -84,6 +84,7 @@ public class NamingCache {
         private void setUrl(NodeUrl url) {
             List<CompletableFuture<NodeUrl>> list;
             synchronized (lock) {
+                fetching = false;
                 if (isLoaded()) {
                     throw new IllegalStateException("URL is loaded already");
                 }
@@ -108,7 +109,6 @@ public class NamingCache {
                 NodeName registeredName = NodeName.parse(nodeName);
                 RegisteredNameInfo info =
                         namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
-                log.info("Resolved {} to {}", nodeName, info != null ? info.getNodeUri() : null);
                 setUrl(new NodeUrl(info != null ? info.getNodeUri() : null));
             } catch (Exception e) {
                 log.error(e.getMessage(), e);

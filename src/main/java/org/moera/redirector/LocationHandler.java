@@ -20,51 +20,52 @@ public class LocationHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        URI uri = httpExchange.getRequestURI();
+        try (httpExchange) {
+            URI uri = httpExchange.getRequestURI();
 
-        if (!uri.getPath().startsWith("/@")) {
-            httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
-            httpExchange.close();
-        }
-
-        try {
-            UniversalLocation uni = new UniversalLocation(uri.toString());
-            URI target;
-            boolean modernBrowser = isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT));
-            boolean staticContent = isStaticContent(uni.getPath());
-            if (!staticContent && modernBrowser) {
-                if (uni.getNodeName() != null) {
-                    NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));
-                    if (root.getUrl() != null) {
-                        uni.setSchemeAndAuthority(new URI(root.getUrl()));
-                    }
-                }
-                String client = getUserClient(httpExchange.getRequestHeaders().getFirst(Http.COOKIE));
-                client = client != null ? client : DEFAULT_CLIENT;
-                target = new URI("https", client, uni.getLocation(), uni.getQuery(), uni.getFragment());
-            } else {
-                if (uni.getNodeName() != null) {
-                    NodeUrl root = uni.getAuthority() != null
-                        ? namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null))
-                        : namingCache.get(uni.getNodeName());
-                    if (root.getUrl() != null) {
-                        uni.setSchemeAndAuthority(new URI(root.getUrl()));
-                    }
-                }
-                if (uni.getAuthority() == null) {
-                    httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
-                    httpExchange.close();
-                }
-                target = new URI(
-                    uni.getScheme(), uni.getAuthority(), "/moera" + uni.getPath(), uni.getQuery(), uni.getFragment()
-                );
+            if (!uri.getPath().startsWith("/@")) {
+                httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
+                return;
             }
-            httpExchange.getResponseHeaders().add("Location", target.toASCIIString());
-            httpExchange.sendResponseHeaders(Http.TEMPORARY_REDIRECT, 0);
-        } catch (URISyntaxException e) {
-            httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
+
+            try {
+                UniversalLocation uni = new UniversalLocation(uri.toString());
+                URI target;
+                boolean modernBrowser = isModernBrowser(httpExchange.getRequestHeaders().getFirst(Http.USER_AGENT));
+                boolean staticContent = isStaticContent(uni.getPath());
+                if (!staticContent && modernBrowser) {
+                    if (uni.getNodeName() != null) {
+                        NodeUrl root = namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null));
+                        if (root.getUrl() != null) {
+                            uni.setSchemeAndAuthority(new URI(root.getUrl()));
+                        }
+                    }
+                    String client = getUserClient(httpExchange.getRequestHeaders().getFirst(Http.COOKIE));
+                    client = client != null ? client : DEFAULT_CLIENT;
+                    target = new URI("https", client, uni.getLocation(), uni.getQuery(), uni.getFragment());
+                } else {
+                    if (uni.getNodeName() != null) {
+                        NodeUrl root = uni.getAuthority() != null
+                            ? namingCache.getFast(uni.getNodeName()).orElse(new NodeUrl(null))
+                            : namingCache.get(uni.getNodeName());
+                        if (root.getUrl() != null) {
+                            uni.setSchemeAndAuthority(new URI(root.getUrl()));
+                        }
+                    }
+                    if (uni.getAuthority() == null) {
+                        httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
+                        return;
+                    }
+                    target = new URI(
+                        uni.getScheme(), uni.getAuthority(), "/moera" + uni.getPath(), uni.getQuery(), uni.getFragment()
+                    );
+                }
+                httpExchange.getResponseHeaders().add("Location", target.toASCIIString());
+                httpExchange.sendResponseHeaders(Http.TEMPORARY_REDIRECT, 0);
+            } catch (URISyntaxException e) {
+                httpExchange.sendResponseHeaders(Http.NOT_FOUND, 0);
+            }
         }
-        httpExchange.close();
     }
 
     private boolean isModernBrowser(String userAgent) {
